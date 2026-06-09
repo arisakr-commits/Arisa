@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คชื่อเข้าเรียนด้วยตัวเอง (Student Self Check-In)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-orange: #E65100;
+            --secondary-gold: #FFB300;
+            --light-gold: #FFF8E1;
+            --dark-text: #374151;
+            --gray-bg: #F9FAFB;
+            --success-green: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFE0B2 0%, #FFF9C4 100%);
+            color: var(--dark-text);
+            min-height: 100vh;
+            padding: 20px 10px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* Header Style */
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(230, 81, 0, 0.15);
+            border-top: 6px solid var(--primary-orange);
+        }
+
+        header h1 {
+            color: var(--primary-orange);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #6B7280;
+            font-size: 0.9rem;
+        }
+
+        /* Card / Form Style */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-orange);
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary-gold);
+            padding-left: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--secondary-gold);
+            box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        /* Button Style */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary-orange) 0%, var(--secondary-gold) 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(230, 81, 0, 0.4);
+        }
+
+        .btn-submit:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Logs Summary Table/Card */
+        .log-container {
+            margin-top: 20px;
+        }
+
+        .log-card {
+            background: #FFFDE7;
+            border: 1px solid #FFF59D;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #FFE082;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .log-badge {
+            background: var(--success-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .log-body p {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .log-body strong {
+            color: var(--primary-orange);
+        }
+
+        /* Utility */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            header h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>ระบบเช็คชื่อเข้าเรียนด้วยตัวเอง</h1>
+        <p>สำหรับนักศึกษา (Student Self Check-In Web App)</p>
+    </header>
+
+    <form id="checkInForm" class="card" onsubmit="handleFormSubmit(event)">
+        <div class="section-title">ข้อมูลรายวิชา</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="subject">ชื่อวิชา <span style="color:red">*</span></label>
+                <input type="text" id="subject" placeholder="ตัวอย่าง: Computer Programming" required>
+            </div>
+            <div class="form-group">
+                <label for="teacher">ชื่ออาจารย์ผู้สอน <span style="color:red">*</span></label>
+                <input type="text" id="teacher" placeholder="ตัวอย่าง: ดร.สมชาย ใจดี" required>
+            </div>
+        </div>
+
+        <div class="section-title">ข้อมูลผู้เข้าเรียน</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="studentId">รหัสนักศึกษา <span style="color:red">*</span></label>
+                <input type="text" id="studentId" placeholder="ตัวอย่าง: 663020123-4" required>
+            </div>
+            <div class="form-group">
+                <label for="studentName">ชื่อ-นามสกุล ของตัวเอง <span style="color:red">*</span></label>
+                <input type="text" id="studentName" placeholder="ตัวอย่าง: นายสมศักดิ์ รักเรียน" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="room">ห้องชั้นเลขที่ <span style="color:red">*</span></label>
+            <input type="text" id="room" placeholder="ตัวอย่าง: ห้อง SC.05 ชั้น 2 หรือ ห้องออนไลน์ (เลขที่ 15)" required>
+        </div>
+
+        <div class="form-group">
+            <label for="notes">หมายเหตุ (ข้อมูลเพิ่มเติม)</label>
+            <textarea id="notes" placeholder="ระบุเหตุผลเพิ่มเติม เช่น เข้าสายเนื่องจากรถติด หรืออื่นๆ (ถ้ามี)"></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">
+            <span id="btnText">📍 กดบันทึกเช็คชื่อเข้าเรียน</span>
+        </button>
+    </form>
+
+    <div class="card log-container">
+        <div class="section-title" style="border-left-color: var(--success-green);">ประวัติการเช็คชื่อสำเร็จ (บนอุปกรณ์นี้)</div>
+        <div id="logsWrapper">
+            <p style="text-align: center; color: #9CA3AF; font-size: 0.9rem; padding: 10px;">ยังไม่มีประวัติการเช็คชื่อในเซสชันนี้</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 💡 สำคัญ: วาง URL Web App ที่ได้จาก Google Apps Script (ตอน Deploy ครั้งแรก) ไว้ที่นี่
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzy_PExeU0rSYBMf1Z3ZrAVF10qXRb4s3tk3qCXxZsJ2tY97_iyqwdr9E9jn-U89fr7cQ/exec";
+
+    // เมื่อโหลดหน้าเว็บ ให้ดึงข้อมูลนักศึกษาเดิมที่เคยกรอกไว้ในเครื่องมาใส่ให้อัตโนมัติ (เพื่อความสะดวก)
+    window.onload = function() {
+        if(localStorage.getItem('saved_studentId')) document.getElementById('studentId').value = localStorage.getItem('saved_studentId');
+        if(localStorage.getItem('saved_studentName')) document.getElementById('studentName').value = localStorage.getItem('saved_studentName');
+        if(localStorage.getItem('saved_room')) document.getElementById('room').value = localStorage.getItem('saved_room');
+        
+        loadLocalLogs();
+    };
+
+
+    // ฟังก์ชันคำนวณระยะห่างทางภูมิศาสตร์แบบ Haversine Formula (เมตร)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // รัศมีของโลก (เมตร)
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c; 
+    }
+
+    // ฟังก์ชันหลักเมื่อกดปุ่มเช็คชื่อ
+    async function handleFormSubmit(event) {
+        event.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        
+        // แสดงสถานะกำลังโหลด
+        submitBtn.disabled = true;
+        btnText.innerHTML = '<span class="loading-spinner"></span> กำลังตรวจสอบพิกัดและบันทึกข้อมูล...';
+
+        // 1. ดึงวันเวลาปัจจุบัน ณ ขณะนั้นอัตโนมัติ (Automated Timestamp)
+        const now = new Date();
+        const timestampStr = now.toLocaleString('th-TH', { 
+            year: 'numeric', month: 'long', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
+        }) + " น.";
+
+        // 2. ดึงพิกัด Geolocation
+        let locationDetails = "ไม่สามารถเข้าถึงพิกัดได้";
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 7000
+                });
+            });
+            
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // สมมติพิกัดจุดศูนย์กลางคณะ/มหาวิทยาลัยเพื่อหาระยะห่าง (ตัวอย่างเช่น อาคารเรียนกลางวิทยาเขต)
+            const targetLat = 16.4322; 
+            const targetLon = 102.8231;
+            const distance = calculateDistance(lat, lon, targetLat, targetLon);
+            
+            locationDetails = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)} (ห่างจากจุดเช็คชื่อกลางประมาณ ${distance.toFixed(1)} เมตร)`;
+        } catch (error) {
+            console.log("Geolocation error or denied:", error);
+            locationDetails = "เปิดสิทธิ์พิกัดไม่สำเร็จ (ระบุตำแหน่ง: โหมดออฟไลน์แมนนวล)";
+        }
+
+        // เก็บรวบรวมข้อมูลทั้งหมดจากฟอร์ม
+        const payload = {
+            subject: document.getElementById('subject').value.trim(),
+            teacher: document.getElementById('teacher').value.trim(),
+            studentId: document.getElementById('studentId').value.trim(),
+            studentName: document.getElementById('studentName').value.trim(),
+            room: document.getElementById('room').value.trim(),
+            notes: document.getElementById('notes').value.trim() || "-",
+            timestamp: timestampStr,
+            location: locationDetails
+        };
+
+        // บันทึกข้อมูลประวัตินักศึกษาลง LocalStorage เพื่อกดครั้งต่อไปไม่ต้องพิมพ์ใหม่ทั้งหมด
+        localStorage.setItem('saved_studentId', payload.studentId);
+        localStorage.setItem('saved_studentName', payload.studentName);
+        localStorage.setItem('saved_room', payload.room);
+
+        // 3. ส่งข้อมูลไปหา Google Apps Script
+        if (WEB_APP_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+            // กรณีผู้ใช้ยังไม่ได้ใส่ URL Apps Script ให้จำลองการบันทึกสำเร็จลงเครื่องเครื่องก่อนเพื่อทดสอบ UI
+            alert("⚠️ คุณยังไม่ได้เชื่อมต่อ URL ของ Apps Script!\nระบบจะจำลองการแสดงผลตารางประวัติด้านล่างให้คุณดูก่อน");
+            saveLogToLocal(payload);
+            resetFormAfterSuccess();
+        } else {
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // รองรับการส่งข้ามโดเมนของ Google Script Redirect
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                // สั่งบันทึกสำเร็จ
+                saveLogToLocal(payload);
+                alert("🎉 บันทึกข้อมูลและเช็คชื่อเข้าชั้นเรียนสำเร็จ!");
+                resetFormAfterSuccess();
+                
+            } catch (err) {
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: " + err.toString());
+            }
+        }
+
+        // คืนค่าปุ่มกด
+        submitBtn.disabled = false;
+        btnText.innerHTML = '📍 กดบันทึกเช็คชื่อเข้าเรียน';
+    }
+
+    // ฟังก์ชันเคลียร์ฟอร์มบางส่วนหลังจากบันทึกเสร็จ (คงค่าข้อมูลนักศึกษาไว้)
+    function resetFormAfterSuccess() {
+        document.getElementById('notes').value = "";
+    }
+
+    // ฟังก์ชันจัดการแสดงผลการ์ด Log ด้านล่าง
+    function saveLogToLocal(data) {
+        let logs = JSON.parse(localStorage.getItem('checkin_logs') || '[]');
+        logs.unshift(data); // นำข้อมูลล่าสุดขึ้นก่อน
+        localStorage.setItem('checkin_logs', JSON.stringify(logs));
+        renderLogs(logs);
+    }
+
+    function loadLocalLogs() {
+        let logs = JSON.parse(localStorage.getItem('checkin_logs') || '[]');
+        renderLogs(logs);
+    }
+
+    function renderLogs(logs) {
+        const wrapper = document.getElementById('logsWrapper');
+        if (logs.length === 0) {
+            wrapper.innerHTML = `<p style="text-align: center; color: #9CA3AF; font-size: 0.9rem; padding: 10px;">ยังไม่มีประวัติการเช็คชื่อในเซสชันนี้</p>`;
+            return;
+        }
+
+        wrapper.innerHTML = logs.map(log => `
+            <div class="log-card">
+                <div class="log-header">
+                    <span style="font-weight: 600; color: #4B5563;">⏱️ ${log.timestamp}</span>
+                    <span class="log-badge">สำเร็จ</span>
+                </div>
+                <div class="log-body">
+                    <p><strong>วิชา:</strong> ${log.subject} (${log.teacher})</p>
+                    <p><strong>ผู้เช็คชื่อ:</strong> ${log.studentId} - ${log.studentName} [${log.room}]</p>
+                    <p style="font-size: 0.8rem; color: #6B7280; margin-top: 5px;">📍 ${log.location}</p>
+                    ${log.notes !== "-" ? `<p style="font-size: 0.85rem; color: #D84315; font-style: italic;">📝 หมายเหตุ: ${log.notes}</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+</script>
+
+</body>
+</html>
